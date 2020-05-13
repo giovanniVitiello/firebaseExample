@@ -35,6 +35,16 @@ dependencies {
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
     implementation 'com.google.firebase:firebase-analytics:17.4.1'
     implementation 'com.google.firebase:firebase-database-ktx:19.3.0'
+
+    implementation 'com.google.firebase:firebase-auth:19.3.1'
+    implementation 'com.firebaseui:firebase-ui-auth:6.2.0'
+
+    // Required only if Facebook login support is required
+    // Find the latest Facebook SDK releases here: https://goo.gl/Ce5L94
+    implementation 'com.facebook.android:facebook-android-sdk:6.3.0'
+    implementation 'com.google.android.material:material:1.1.0'
+
 }
