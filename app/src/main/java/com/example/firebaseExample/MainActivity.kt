@@ -3,6 +3,7 @@ package com.example.firebaseExample
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
@@ -27,11 +28,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        writeNewUser("1", "giovy10","giovy@prova.com")
-        writeNewUser("2", "nik","nik@prova.com")
+        writeNewUser("1", "giovy10","giovy@prova.com", 15)
+        writeNewUser("2", "nik","nik@prova.com", 680)
+        writeNewUser("3", "prova","prova@prova.com", 475)
 
         database.child("users").child("10").child("username").setValue("nik")
         database.child("users").child("10").child("email").setValue("nik@prova.it")
+        database.child("users").child("10").child("score").setValue(520)
 
         // fun for read element in db
         val postListener = object : ValueEventListener {
@@ -49,11 +52,32 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        //make a query in database realtime
+        //orderbychild need to create a list of all child with those path("username")
+
+        val query: Query = database.child("users").orderByChild("score")
+        query.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (userSnapshot in dataSnapshot.children) {
+                    Log.i("TAG","username in alphabetical order " + userSnapshot.child("score"))
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Getting Post failed, log a message
+                Log.w(
+                   "FragmentActivity.TAG",
+                    "loadPost:onCancelled",
+                    databaseError.toException()
+                )
+            }
+        })
+
         database.addValueEventListener(postListener)
     }
 
-    private fun writeNewUser(userId: String, name: String, email: String?) {
-        val user = User(name, email)
+    private fun writeNewUser(userId: String, name: String, email: String?, score: Int) {
+        val user = User(name, email, score)
         database.child("users").child(userId).setValue(user) //load data in db with setValue and pass the object
     }
 }
@@ -61,7 +85,8 @@ class MainActivity : AppCompatActivity() {
 @IgnoreExtraProperties
 data class User(
     var username: String? = "",
-    var email: String? = ""
+    var email: String? = "",
+    var score: Int? = 0
 ) {
 
     @Exclude
@@ -72,3 +97,48 @@ data class User(
         )
     }
 }
+
+// CREATE AUTHENTICATION ANONIMOUS WITHOUT FIREBASE UI. DIRECTLY IN ONCREATE
+
+//private lateinit var auth: FirebaseAuth
+//
+//override fun onCreate(savedInstanceState: Bundle?) {
+//    super.onCreate(savedInstanceState)
+//    setContentView(R.layout.activity_main)
+//
+//    database = Firebase.database.reference
+//
+//    auth = FirebaseAuth.getInstance()
+//
+//    if (auth.currentUser == null) {
+//        auth.signInAnonymously()
+//            .addOnCompleteListener(this) { task ->
+//                if (task.isSuccessful) {
+//                    val user = auth.currentUser
+//                    // Sign in success, update UI with the signed-in user's information
+//                    Log.d("autentication_log", "signInAnonymously:success")
+//                } else {
+//                    // If sign in fails, display a message to the user.
+//                    Log.w("autentication_log", "signInAnonymously:failure", task.exception)
+//                    Toast.makeText(
+//                        baseContext, "Authentication failed.",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                }
+//            }
+//    }
+// fun for read element in db
+//val postListener = object : ValueEventListener {
+//    override fun onDataChange(dataSnapshot: DataSnapshot) {
+//        for (ds in dataSnapshot.child("users").children) {
+//            val username = ds.getValue(User::class.java)
+//            Log.d("TAG", username.toString())
+//        }
+//    }
+//
+//    override fun onCancelled(databaseError: DatabaseError) {
+//        // Getting Post failed, log a message
+//        Log.w("TAG", "loadPost:onCancelled", databaseError.toException())
+//        // ...
+//    }
+//}

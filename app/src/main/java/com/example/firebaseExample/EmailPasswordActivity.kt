@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
@@ -19,6 +20,7 @@ class EmailPasswordActivity : AppCompatActivity() {
     private lateinit var fbAuth: FirebaseAuth
     private lateinit var provider: ArrayList<AuthUI.IdpConfig>
     private lateinit var btnLogout: Button
+    private lateinit var btnDelete: Button
     private lateinit var goToMain: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,10 +35,12 @@ class EmailPasswordActivity : AppCompatActivity() {
             AuthUI.IdpConfig.EmailBuilder().build(),
             AuthUI.IdpConfig.PhoneBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build(),
-            AuthUI.IdpConfig.FacebookBuilder().build()
+            AuthUI.IdpConfig.FacebookBuilder().build(),
+            AuthUI.IdpConfig.AnonymousBuilder().build()
         )
 
         btnLogout = findViewById(R.id.btn_sign_out)
+        btnDelete = findViewById(R.id.btn_delete)
         goToMain = findViewById(R.id.go_to_main_screen)
         showSignInOption()
         clickListener()
@@ -69,19 +73,41 @@ class EmailPasswordActivity : AppCompatActivity() {
 
     private fun clickListener() {
         btnLogout.setOnClickListener {
-            AuthUI.getInstance().signOut(this@EmailPasswordActivity) //logOut instance
-                .addOnCompleteListener {
-                    btn_sign_out.isEnabled = false
-                    showSignInOption()
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this, "" + e.message, Toast.LENGTH_LONG).show()
-                }
+            signOut()
+        }
+
+        btnDelete.setOnClickListener {
+            delete()
         }
 
         goToMain.setOnClickListener {
             val myIntent = Intent(this@EmailPasswordActivity, MainActivity::class.java)
             startActivity(myIntent)
         }
+    }
+
+    private fun signOut() {
+        AuthUI.getInstance()
+            .signOut(this@EmailPasswordActivity) //logOut instance
+            .addOnCompleteListener {task ->
+                if (task.isSuccessful){
+                    btn_sign_out.isEnabled = false
+                    showSignInOption()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "" + e.message, LENGTH_LONG).show()
+            }
+    }
+
+    private fun delete() {
+        fbAuth.currentUser
+            ?.delete()
+            ?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this, getString(R.string.deleted), LENGTH_LONG).show()
+                    showSignInOption()
+                }
+            }
     }
 }
