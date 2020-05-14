@@ -1,7 +1,10 @@
 package com.example.firebaseExample
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
@@ -12,23 +15,27 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_email_password.*
 import java.util.*
+import java.util.prefs.Preferences
 
 const val MY_REQUEST_CODE = 100
 
 class EmailPasswordActivity : AppCompatActivity() {
 
-    private lateinit var fbAuth: FirebaseAuth
     private lateinit var provider: ArrayList<AuthUI.IdpConfig>
     private lateinit var btnLogout: Button
     private lateinit var btnDelete: Button
     private lateinit var goToMain: Button
+    private lateinit var sharedPreferences: SharedPreferences
+
+    //instance authentication firebase
+    private val fbAuth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_email_password)
 
-        //instance authentication firebase
-        fbAuth = FirebaseAuth.getInstance()
+        sharedPreferences = this.getSharedPreferences("uuid",Context.MODE_PRIVATE)
+        sharedPreferences.getString("uuid", " ")
 
         //provider authentication type
         provider = arrayListOf(
@@ -42,22 +49,27 @@ class EmailPasswordActivity : AppCompatActivity() {
         btnLogout = findViewById(R.id.btn_sign_out)
         btnDelete = findViewById(R.id.btn_delete)
         goToMain = findViewById(R.id.go_to_main_screen)
+
         showSignInOption()
         clickListener()
     }
 
+    @SuppressLint("RestrictedApi")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == MY_REQUEST_CODE) {
-            val response = IdpResponse.fromResultIntent(data)
+            val response = IdpResponse.fromResultIntent(data) // response are the data of auth(email,phone,provider)
             if (resultCode == Activity.RESULT_OK) {
                 val token = response?.idpToken
-                val user = FirebaseAuth.getInstance().currentUser  // get current user
-                Toast.makeText(this, "" + user?.email, Toast.LENGTH_LONG).show()
+                val user = fbAuth.currentUser  // get current user
+                Toast.makeText(this, "" + user?.email, LENGTH_LONG).show()
+                val userUid = user?.uid
+                sharedPreferences.edit().putString("uuid", userUid).apply()
+
 
                 btn_sign_out.isEnabled = true
             } else {
-                Toast.makeText(this, "" + response?.error?.message, Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "" + response?.error?.message, LENGTH_LONG).show()
             }
         }
     }

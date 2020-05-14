@@ -1,9 +1,10 @@
 package com.example.firebaseExample
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.FragmentActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
@@ -14,6 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var fbAuth : FirebaseAuth
     private lateinit var database: DatabaseReference
+    private lateinit var sharedPreferences : SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,6 +23,8 @@ class MainActivity : AppCompatActivity() {
 
         fbAuth = FirebaseAuth.getInstance()
         database = Firebase.database.reference
+        sharedPreferences = this.getSharedPreferences("uuid", Context.MODE_PRIVATE)
+        val userId = sharedPreferences.getString("uuid", " ")
 
         fbAuth.addAuthStateListener {
             if(fbAuth.currentUser == null){
@@ -28,10 +32,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        writeNewUser("1", "giovy10","giovy@prova.com", 15)
-        writeNewUser("2", "nik","nik@prova.com", 680)
-        writeNewUser("3", "prova","prova@prova.com", 475)
+        // here I pass the same id of authentication in the database
+        writeNewUser(userId, "giovy10","giovy@prova.com", 15)
+        writeNewUser("16", "nik","nik@prova.com", 680)
 
+        // how to update child value in node for example "username" or "email" or "score"
         database.child("users").child("10").child("username").setValue("nik")
         database.child("users").child("10").child("email").setValue("nik@prova.it")
         database.child("users").child("10").child("score").setValue(520)
@@ -53,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         //make a query in database realtime
-        //orderbychild need to create a list of all child with those path("username")
+        //orderbychild need to create a list of all child of node users with those path("score")
 
         val query: Query = database.child("users").orderByChild("score")
         query.addValueEventListener(object : ValueEventListener {
@@ -76,9 +81,11 @@ class MainActivity : AppCompatActivity() {
         database.addValueEventListener(postListener)
     }
 
-    private fun writeNewUser(userId: String, name: String, email: String?, score: Int) {
+    private fun writeNewUser(userId: String?, name: String, email: String?, score: Int) {
         val user = User(name, email, score)
-        database.child("users").child(userId).setValue(user) //load data in db with setValue and pass the object
+        if (userId != null) {
+            database.child("users").child(userId).setValue(user)
+        } //load data in db with setValue and pass the object
     }
 }
 
